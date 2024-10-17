@@ -1,0 +1,17 @@
+!pip install yfinance
+import yfinance as yf
+import matplotlib.pyplot as plt
+import pandas as pd
+
+start_date = '2014-01-01'
+end_date = pd.Timestamp.today().strftime('%Y-%m-%d')
+btc = yf.download('BTC-USD', start=start_date, end=end_date)
+
+plt.figure(figsize=(10, 6))
+plt.loglog(btc.index, btc['Close'], label='BTC', color='orange')
+plt.title('BTC Price (2014 - Present)')
+plt.xlabel('Date')
+plt.ylabel('Price (USD)')
+plt.grid(True)
+plt.legend()
+plt.show()
