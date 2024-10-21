@@ -1,0 +1,90 @@
+pip install yfinance matplotlib numpy
+
+from datetime import timedelta
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+import yfinance as yf
+
+
+# Download historical data for Bitcoin starting from 2010
+start_date = '2014-01-01'
+end_date = pd.Timestamp.today().strftime('%Y-%m-%d')
+btc = yf.download('BTC-USD', start=start_date, end=end_date)
+
+btc['Log_Price'] = np.log(btc['Adj Close'])
+btc['Log_Date'] = np.log(pd.to_datetime(btc.index).map(pd.Timestamp.timestamp)) 
+
+X = btc['Log_Date'].values.reshape(-1, 1)
+y = btc['Log_Price'].values 
+
+model = LinearRegression()
+model.fit(X, y)
+
+slope = model.coef_[0]
+intercept = model.intercept_
+
+predicted_log_prices = model.predict(X)
+
+plt.plot(X, y, color='blue', label='Log-Log Data')
+plt.plot(X, predicted_log_prices, color='red', label='Linear Regression Fit')
+plt.xlabel('Log Date')
+plt.ylabel('Log Price')
+plt.title('Log-Log Bitcoin Price Regression')
+plt.legend()
+plt.show()
+# Load Bitcoin data (Assuming 'Adj Close' column contains the adjusted close prices of Bitcoin)
+# and the index is the date of each observation
+
+# Convert the Bitcoin prices to log scale
+btc['Log_Price'] = np.log(btc['Adj Close'])
+# Convert the dates to log scale based on their timestamps
+btc['Log_Date'] = np.log(pd.to_datetime(btc.index).map(pd.Timestamp.timestamp))
+
+# Prepare the data for linear regression
+X = btc['Log_Date'].values.reshape(-1, 1)  # Independent variable (log of date)
+y = btc['Log_Price'].values  # Dependent variable (log of price)
+
+# Create a linear regression model
+model = LinearRegression()
+model.fit(X, y)
+
+# Get the slope and intercept of the regression line
+slope = model.coef_[0]
+intercept = model.intercept_
+
+# Predict the log prices using the linear model
+predicted_log_prices = model.predict(X)
+
+# Get the latest date and add 5 years for the future prediction
+last_date = pd.to_datetime(btc.index).max()  # Last date from the data
+future_date = last_date + timedelta(days=365 * 5)  # Add 5 years
+
+# Convert the future date to log timestamp
+log_future_date = np.log(pd.Timestamp(future_date).timestamp()).reshape(1, -1)
+
+# Predict the log price for the future date
+log_predicted_future_price = model.predict(log_future_date)
+
+# Plot the log-log data and linear regression fit
+plt.plot(X, y, color='blue', label='Log-Log Data')
+plt.plot(X, predicted_log_prices, color='red', label='Linear Regression Fit')
+
+# Add the prediction for 5 years later to the plot
+plt.scatter(log_future_date, log_predicted_future_price, color='green', label='5-Year Prediction', marker='x', s=100)
+
+# Set labels and title
+plt.xlabel('Log Date')
+plt.ylabel('Log Price')
+plt.title('Log-Log Bitcoin Price Regression with 5-Year Prediction')
+
+# Display legend and the plot
+plt.legend()
+plt.show()
+
+# Convert the log predicted price back to its original scale
+predicted_price = np.exp(log_predicted_future_price[0])  # Reverse the log transformation to get the real price
+print(f"Slope: {slope}")
+print(f"Intercept: {intercept}")
+print(f"Predicted Bitcoin price in 5 years: {predicted_price:.2f}")
